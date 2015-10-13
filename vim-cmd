@@ -14,36 +14,41 @@
 #   This allows the user name and/or server to be specified on the command line.
 # * Now allows any vim-cmd command to be run.
 
+# 2015-10-13 MRB
+# * Removed parameters for username and server (-u and -s)
+#   Now require a server and optionaly a username in the standard
+#   user@server format.
+
 function show_help {
-    echo "Usage: `basename $0` [-u username][-s server][-h|-?] vim-cmd"
+    echo "usage: `basename $0` [-h|-?] [user@]hostname command"
+    echo ""
+    echo "       -h|-? : Print this help"
+    echo "        user : Optional user to connect to host as"
+    echo "    hostname : The host to connect to"
+    echo "     command : The vim-cmd command to run on the host"
+    echo "               or leave blank to see a list of avialable comands"
 }
 
-
-OPTIND=1			# Reset in case getopts previously used in shell
-
-username="root"
-server="vsphere-esxi"
-
-
-while getopts "h?u:s:" opt; do
+# Handle command line parameters
+OPTIND=1
+while getopts "h?" opt; do
     case "$opt" in
 	h|\?)
 	    show_help
 	    exit 0
 	    ;;
-	u)
-	    username=$OPTARG
-	    ;;
-	s)
-	    server=$OPTARG
-	    ;;
     esac
 done
-
 shift $((OPTIND-1))
-
 [ "$1" = "--" ] && shift
 
-cmd="vim-cmd $@"
+# Check for required parameters
+if [ -z "$1" ]; then
+    show_help
+    exit -1
+fi
 
-ssh $username@$server $cmd
+server=$1
+shift
+
+ssh $server "vim-cmd $@"

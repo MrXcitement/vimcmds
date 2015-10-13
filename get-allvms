@@ -10,35 +10,40 @@
 # 2015.05.06
 # * First release.
 
+# 2015-10-13 MRB
+# * Removed parameters for username and server (-u and -s)
+#   Now require a server and optionaly a username in the standard
+#   user@server format.
+
 function show_help {
-    echo "Usage: $(basename $0) [-u username] [-s server] [-h|-?]"
+    echo "usage: $(basename $0) [-h|-?] [user@]hostname"
+    echo ""
+    echo "       -h|-? : Print this help"
+    echo "        user : Optional user to connect to host as"
+    echo "    hostname : The host to connect to"
 }
 
-OPTIND=1			# Reset in case getopts previously used in shell
-
-username=""
-server=""
-
-while getopts "h?u:s:" opt; do
+# Parse the command line for options
+OPTIND=1
+while getopts "h?" opt; do
     case "$opt" in
 	h|\?)
 	    show_help
 	    exit 0
 	    ;;
-	u)
-	    username="-u $OPTARG"
-	    ;;
-	s)
-	    server="-s $OPTARG"
-	    ;;
     esac
 done
-
 shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
-cmd="vmsvc/getallvms"
+# Check for required server
+if [ -z "$1" ]; then
+    show_help
+    exit -1
+fi
 
-./vim-cmd $username $server $cmd | \
+# List all of the VMs on the specified host.
+# Use grep and sort commands to sort and filter the list.
+./vim-cmd $1 "vmsvc/getallvms" | \
     awk -F'[[:space:]][[:space:]][[:space:]]*' \
-	'/^[0-9]+/{ printf "%02d\t%s\n",$1, $2; }'
+	  '/^[0-9]+/{ printf "%02d\t%s\n",$1, $2; }'

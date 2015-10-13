@@ -13,33 +13,43 @@
 # * Added optional argument handling via getopts.
 #   Now you can specifiy a username and/or server
 
+# 2015-10-13
+# * Removed parameters for username and server (-u and -s)
+#   Now require a server and optionaly a username in the standard
+#   user@server format.
+
 function show_help {
-    echo "Usage: $(basename $0) [-u username] [-s server] [-h|-?] vmid"
+    echo "usage: $(basename $0) [-h|-?] [user@]hostname vmid"
+    echo ""
+    echo "       -h|-? : Print this help"
+    echo "        user : Optional user to connect to host as"
+    echo "    hostname : The host to connect to"
+    echo "        vmid : The virtual machine id (use get-allvms to find)"
 }
 
-OPTIND=1			# Reset in case getopts previously used in shell
-
-username=""
-server=""
-
-while getopts "h?u:s:" opt; do
+# parse the command line
+OPTIND=1
+while getopts "h?" opt; do
     case "$opt" in
 	h|\?)
 	    show_help
 	    exit 0
 	    ;;
-	u)
-	    username="-u $OPTARG"
-	    ;;
-	s)
-	    server="-s $OPTARG"
-	    ;;
     esac
 done
-
 shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
-cmd="vmsvc/power.getstate $@"
+# Check for required server
+if [ -z "$1" ]; then
+    show_help
+    exit -1
+fi
 
-./vim-cmd $username $server $cmd
+# Check for required vmid
+if [ -z "$2" ]; then
+    show_help
+    exit -2
+fi
+
+./vim-cmd $1 "vmsvc/power.getstate" $2

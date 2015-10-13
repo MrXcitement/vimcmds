@@ -13,31 +13,47 @@
 # * Added optional argument support via getopts
 #   Now you can specify the server to show the vm from.
 
+# 2015-10-13 MRB
+# * Removed parameters for username and server (-u and -s)
+#   Now require a server and optionaly a username in the standard
+#   user@server format.
 
 function show_help {
-    echo "Usage: $(basename $0) [-s server] [-h|-?] vmid"
+    echo "usage: $(basename $0) [-h|-?] [user@]hostname vmid"
+    echo ""
+    echo "       -h|-? : Print this help"
+    echo "        user : The user to connect to host as"
+    echo "    hostname : The host to connect to"
+    echo "        vmid : The virtual machine id (use get-allvms to find)"
 }
 
-OPTIND=1			# Reset in case getopts previously used in shell
-
-server="vsphere-esxi"
-
-while getopts "h?u:s:" opt; do
+# Parse command line arguments
+OPTIND=1
+while getopts "h?" opt; do
     case "$opt" in
 	h|\?)
 	    show_help
 	    exit 0
 	    ;;
-	s)
-	    server=$OPTARG
-	    ;;
     esac
 done
-
 shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
+# Check for required hostname
+if [ -z "$1" ]; then
+    show_help
+    exit -1
+fi
+
+# Check for required virtual macine id - vmid
+if [ -z "$2" ]; then
+    show_help
+    exit -1
+fi
+
+# Build the uri and show the specifed vm
 port="443"
-uri="vmrc://@$server:$port/?moid=$1"
+uri="vmrc://@$1:$port/?moid=$2"
 
 open $uri

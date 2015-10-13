@@ -14,32 +14,53 @@
 # * Added optional argument handling via getopts.
 #   Now you can specifiy a username and/or server
 
+# 2015-10-13
+# * Removed parameters for username and server (-u and -s)
+#   Now require a server and optionaly a username in the standard
+#   user@server format.
+
 function show_help {
-    echo "Usage: $(basename $0) [-u username] [-s server] [-h|-?] vmid"
+    echo "usage: $(basename $0) [-h|-?] [user@]hostname option vmid"
+    echo ""
+    echo "       -h|-? : Print this help"
+    echo "        user : Optional user to connect to host as"
+    echo "    hostname : The host to connect to"
+    echo "      option : The tools options:"
+    echo "               cancelinstall, install, upgrade"
+    echo "        vmid : the virtual machine id (use get-allvms to find)"
 }
 
-OPTIND=1			# Reset in case getopts previously used in shell
-
-username=""
-server=""
-
-while getopts "h?u:s:" opt; do
+# Parse the command line.
+OPTIND=1
+while getopts "h?" opt; do
     case "$opt" in
 	h|\?)
 	    show_help
 	    exit 0
 	    ;;
-	u)
-	    username="-u $OPTARG"
-	    ;;
-	s)
-	    server="-s $OPTARG"
-	    ;;
     esac
 done
-
 shift $((OPTIND-1))
 [ "$1" = "--" ] && shift
 
-cmd="vmsvc/tools.$2 $1"
-./vim-cmd $username $server $cmd
+# Check for required hostname
+if [ -z "$1" ]; then
+    show_help
+    exit -1
+fi
+
+# Check for required option
+if [ -z "$2" ]; then
+    show_help
+    exit -2
+fi
+
+# Check for required vmid
+if [ -z "$3" ]; then
+    show_help
+    exit -3
+fi
+
+
+# Install VMware tools in the specified vm
+./vim-cmd $1 "vmsvc/tools.$2" $3
