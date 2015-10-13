@@ -1,0 +1,49 @@
+#!/bin/bash
+# vim-cmd --- Run a vim-cmd command on a vsphere/esxi server
+# Use ssh to run the vimsh passing in a vim-cmd command to be run.
+
+# Author: Mike Barker <mike@thebarkers.com>
+# Created: September  2, 2015
+
+# History:
+# 2015-09-02
+# * First release.
+
+# 2015-10-04
+# * Add optional argument support via getopts(1).
+#   This allows the user name and/or server to be specified on the command line.
+# * Now allows any vim-cmd command to be run.
+
+function show_help {
+    echo "Usage: `basename $0` [-u username][-s server][-h|-?] vim-cmd"
+}
+
+
+OPTIND=1			# Reset in case getopts previously used in shell
+
+username="root"
+server="vsphere-esxi"
+
+
+while getopts "h?u:s:" opt; do
+    case "$opt" in
+	h|\?)
+	    show_help
+	    exit 0
+	    ;;
+	u)
+	    username=$OPTARG
+	    ;;
+	s)
+	    server=$OPTARG
+	    ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+[ "$1" = "--" ] && shift
+
+cmd="vim-cmd $@"
+
+ssh $username@$server $cmd

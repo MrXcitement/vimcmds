@@ -1,0 +1,45 @@
+#!/bin/bash
+# set-vm-tools --- Set the vmware tools state
+# Set the vmware tools state for a specific vm by id
+# Available states are cancelInstall, install, upgrade
+
+# Author: Mike Barker <mike@thebarkers.com>
+# Created: September  2, 2015
+
+# History:
+# 2015.09.02
+# * First release.
+
+# 2015-10-04
+# * Added optional argument handling via getopts.
+#   Now you can specifiy a username and/or server
+
+function show_help {
+    echo "Usage: $(basename $0) [-u username] [-s server] [-h|-?] vmid"
+}
+
+OPTIND=1			# Reset in case getopts previously used in shell
+
+username=""
+server=""
+
+while getopts "h?u:s:" opt; do
+    case "$opt" in
+	h|\?)
+	    show_help
+	    exit 0
+	    ;;
+	u)
+	    username="-u $OPTARG"
+	    ;;
+	s)
+	    server="-s $OPTARG"
+	    ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+cmd="vmsvc/tools.$2 $1"
+./vim-cmd $username $server $cmd

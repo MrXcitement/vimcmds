@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# show-vm --- show the specified vm in the vmrc client
+
+# Author: Mike Barker <mike@thebarkers.com>
+# Created: May  6, 2015
+
+# History:
+# 2015.05.06
+# * First release.
+
+# 2015-10-04
+# * Added optional argument support via getopts
+#   Now you can specify the server to show the vm from.
+
+
+function show_help {
+    echo "Usage: $(basename $0) [-s server] [-h|-?] vmid"
+}
+
+OPTIND=1			# Reset in case getopts previously used in shell
+
+server="vsphere-esxi"
+
+while getopts "h?u:s:" opt; do
+    case "$opt" in
+	h|\?)
+	    show_help
+	    exit 0
+	    ;;
+	s)
+	    server=$OPTARG
+	    ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+port="443"
+uri="vmrc://@$server:$port/?moid=$1"
+
+open $uri

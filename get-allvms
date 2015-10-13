@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# get-allvms --- Get all the virtual machine's id and name
+# Use this script to get the id and name of all the virtual machines on my esxi server
+
+# Author: Mike Barker <mike@thebarkers.com>
+# Created: May  6, 2015
+
+# History:
+# 2015.05.06
+# * First release.
+
+function show_help {
+    echo "Usage: $(basename $0) [-u username] [-s server] [-h|-?]"
+}
+
+OPTIND=1			# Reset in case getopts previously used in shell
+
+username=""
+server=""
+
+while getopts "h?u:s:" opt; do
+    case "$opt" in
+	h|\?)
+	    show_help
+	    exit 0
+	    ;;
+	u)
+	    username="-u $OPTARG"
+	    ;;
+	s)
+	    server="-s $OPTARG"
+	    ;;
+    esac
+done
+
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+cmd="vmsvc/getallvms"
+
+./vim-cmd $username $server $cmd | \
+    awk -F'[[:space:]][[:space:]][[:space:]]*' \
+	'/^[0-9]+/{ printf "%02d\t%s\n",$1, $2; }'
