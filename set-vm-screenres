@@ -1,0 +1,63 @@
+#!/bin/bash
+
+# set-vm-screenres --- Set the vm's screen's resolution.
+# Tell the vm to change the screen's resolution.
+
+# Author: Mike Barker <mike@thebarkers.com>
+# Created: October 27th, 2015
+
+# History:
+# 2015.10.27
+# * First release.
+
+
+function show_help {
+    echo "usage: $(basename $0) [-h|-?] [user@]hostname vmid width height"
+    echo ""
+    echo "       -h|-? : Print this help"
+    echo "        user : Optional user to connect to the host as."
+    echo "    hostname : The host to connect to."
+    echo "        vmid : the virtual machine id (use get-allvms to find)"
+    echo "       width : The width of the screen in pixels."
+    echo "      height : The height of the screen in pixels."
+}
+
+OPTIND=1
+while getopts "h?" opt; do
+    case "$opt" in
+	h|\?)
+	    show_help
+	    exit 0
+	    ;;
+    esac
+done
+shift $((OPTIND-1))
+[ "$1" = "--" ] && shift
+
+# Check for required server
+if [ -z "$1" ]; then
+    show_help
+    exit -1
+fi
+
+# Check for required vmid
+if [ -z "$2" ]; then
+    show_help
+    exit -2
+fi
+
+# Check for required screen width
+if [ -z "$3" ]; then
+    show_help
+    exit -3
+fi
+
+# Check for required screen height
+if [ -z "$4" ]; then
+    show_help
+    exit -4
+fi
+
+
+# Set the power state
+./vim-cmd $1 vmsvc/setscreenres $2 $3 $4
